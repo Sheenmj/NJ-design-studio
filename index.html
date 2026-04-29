@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NJ Design Studio — Architecture & Urban Innovation</title>
+  <meta name="description" content="NJ Design Studio is a visionary architectural firm crafting immersive spaces that merge innovation, sustainability, and human experience. Explore our portfolio of award-winning projects." />
+  <meta name="keywords" content="architecture firm, NJ Design Studio, sustainable design, 3D architecture, urban planning, interior architecture" />
+  <meta property="og:title" content="NJ Design Studio — Architecture & Urban Innovation" />
+  <meta property="og:description" content="Visionary architectural design for a better tomorrow." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════ NAVIGATION ═══════════════════════════════════ -->
+  <nav id="navbar" class="navbar">
+    <a href="#home" class="nav-logo" id="nav-logo">
+      <span class="logo-mark">NJ</span>
+      <span class="logo-text">Design Studio</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#home" class="nav-link active" data-section="home">Home</a></li>
+      <li><a href="#portfolio" class="nav-link" data-section="portfolio">Portfolio</a></li>
+      <li><a href="#services" class="nav-link" data-section="services">Services</a></li>
+      <li><a href="#process" class="nav-link" data-section="process">Process</a></li>
+      <li><a href="#about" class="nav-link" data-section="about">About</a></li>
+
+      <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="nav-cta" id="nav-cta">Get Quote</a>
+  </nav>
+
+  <!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
+  <section id="home" class="section hero-section">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-content glass-card">
+      <div class="hero-eyebrow">Architecture Studio · Est. 2008</div>
+      <h1 class="hero-title">
+        We Build<br/><em>Tomorrow's</em><br/>Skylines
+      </h1>
+      <p class="hero-subtitle">Award-winning architectural design at the intersection of innovation, sustainability, and human experience.</p>
+      <div class="hero-actions">
+        <a href="#portfolio" class="btn btn-primary" id="hero-explore-btn">Explore Work</a>
+        <a href="#process" class="btn btn-ghost" id="hero-process-btn">Our Process</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-num" data-target="100">0</span><span>+</span>
+          <span class="hero-stat-label">Projects</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-num" data-target="5">0</span><span>+</span>
+          <span class="hero-stat-label">Cities</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll-hint" id="scroll-hint">
+      <span>Scroll to explore</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ PORTFOLIO ═══════════════════════════════════ -->
+  <section id="portfolio" class="section portfolio-section">
+    <div class="section-header">
+      <div class="section-eyebrow">Selected Works</div>
+      <h2 class="section-title">Our Portfolio</h2>
+      <p class="section-subtitle">Each project is a unique dialogue between site, program, and vision — translated into built form.</p>
+    </div>
+
+    <div class="portfolio-filters">
+      <button class="filter-btn active" data-filter="all" id="filter-all">All</button>
+      <button class="filter-btn" data-filter="residential" id="filter-residential">Residential</button>
+      <button class="filter-btn" data-filter="commercial" id="filter-commercial">Commercial</button>
+      <button class="filter-btn" data-filter="cultural" id="filter-cultural">Cultural</button>
+      <button class="filter-btn" data-filter="urban" id="filter-urban">Urban</button>
+    </div>
+
+    <div class="portfolio-grid" id="portfolio-grid">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ PROJECT MODAL ═══════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="project-modal">
+      <button class="modal-close" id="modal-close" aria-label="Close modal">×</button>
+      <div class="modal-inner" id="modal-inner">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SERVICES ═══════════════════════════════════ -->
+  <section id="services" class="section services-section">
+    <div class="section-header">
+      <div class="section-eyebrow">What We Do</div>
+      <h2 class="section-title">Our Services</h2>
+      <p class="section-subtitle">A comprehensive suite of architectural services, from first sketch to final handover.</p>
+    </div>
+    <div class="services-grid" id="services-grid">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ PROCESS ═══════════════════════════════════ -->
+  <section id="process" class="section process-section">
+    <div class="section-header">
+      <div class="section-eyebrow">How We Work</div>
+      <h2 class="section-title">Our Process</h2>
+      <p class="section-subtitle">A rigorous, transparent workflow that transforms vision into reality — on time and on brief.</p>
+    </div>
+    <div class="process-timeline-wrap">
+      <canvas id="process-canvas"></canvas>
+      <div class="process-timeline" id="process-timeline">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ ABOUT ═══════════════════════════════════ -->
+  <section id="about" class="section about-section">
+    <div class="about-philosophy">
+      <div class="section-eyebrow">Our Philosophy</div>
+      <blockquote class="philosophy-quote">
+        "Architecture is not just the art of building — it is the art of inhabiting the world with intention, beauty, and care."
+      </blockquote>
+      <p class="philosophy-body">Founded in 2008 by Nishant Joesph, NJ Design Studio was built on the belief that great architecture serves people first. We operate at the intersection of rigorous craft and bold vision — embracing technology to amplify human creativity, never replace it.</p>
+    </div>
+    <div class="team-grid single-member" id="team-grid">
+      <!-- Populated by JS -->
+    </div>
+    <div class="awards-strip" id="awards-strip">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+
+
+  <!-- ═══════════════════════════════════ CONTACT ═══════════════════════════════════ -->
+  <section id="contact" class="section contact-section">
+    <canvas id="contact-canvas"></canvas>
+    <div class="contact-inner">
+      <div class="contact-left">
+        <div class="section-eyebrow">Let's Build Together</div>
+        <h2 class="section-title contact-title">Start Your<br/><em>Project</em></h2>
+        <p class="contact-intro">Whether you're planning a residence, a mixed-use development, or an urban regeneration project — we'd love to hear your vision.</p>
+        <div class="contact-details">
+          <div class="contact-detail-item">
+            <span class="contact-detail-icon">✦</span>
+            <div>
+              <div class="contact-detail-label">Studio</div>
+              <div class="contact-detail-value">Sanjeevani Nagar, Jabalpur, Madhya Pradesh 482002</div>
+            </div>
+          </div>
+          
+          <div class="contact-map" style="margin: 1.5rem 0 2rem 0; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <iframe 
+              width="100%" 
+              height="200" 
+              frameborder="0" 
+              scrolling="no" 
+              marginheight="0" 
+              marginwidth="0" 
+              src="https://maps.google.com/maps?q=NJ%20Design%20Studio%20Sanjeevani%20Nagar,%20Jabalpur,%20Madhya%20Pradesh%20482002&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              style="display: block; filter: grayscale(100%) invert(92%) contrast(83%);">
+            </iframe>
+          </div>
+
+          <div class="contact-detail-item">
+            <span class="contact-detail-icon">✦</span>
+            <div>
+              <div class="contact-detail-label">Email</div>
+              <div class="contact-detail-value">joseph.nishant011@gmail.com</div>
+            </div>
+          </div>
+          <div class="contact-detail-item">
+            <span class="contact-detail-icon">✦</span>
+            <div>
+              <div class="contact-detail-label">Phone</div>
+              <div class="contact-detail-value">+91 75073 04073</div>
+            </div>
+          </div>
+        </div>
+        <div class="social-links">
+          <a href="https://www.instagram.com/ar.nishant.joseph?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="social-link" id="social-ig">Instagram</a>
+
+          <a href="#" class="social-link" id="social-be">Behance</a>
+        </div>
+      </div>
+      <div class="contact-right">
+        <form class="contact-form glass-card" id="contact-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cf-name">Full Name</label>
+              <input type="text" id="cf-name" name="name" placeholder="John Smith" required />
+            </div>
+            <div class="form-group">
+              <label for="cf-email">Email</label>
+              <input type="email" id="cf-email" name="email" placeholder="john@example.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cf-phone">Phone Number</label>
+            <input type="tel" id="cf-phone" name="phone" placeholder="+91 98765 43210" />
+          </div>
+          <div class="form-group">
+            <label for="cf-type">Project Type</label>
+            <input list="type-suggestions" id="cf-type" name="type" placeholder="e.g. Residential, Commercial..." />
+            <datalist id="type-suggestions">
+              <option value="Residential"></option>
+              <option value="Commercial"></option>
+              <option value="Interior Design"></option>
+              <option value="Urban Planning"></option>
+              <option value="General Consultation"></option>
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label for="cf-budget">Estimated Budget</label>
+            <input list="budget-ranges" id="cf-budget" name="budget" placeholder="e.g. 50 Lakhs, 2 Cr..." />
+            <datalist id="budget-ranges">
+              <option value="Under 50 Lakhs"></option>
+              <option value="50 Lakhs – 1 Cr"></option>
+              <option value="1 Cr – 5 Cr"></option>
+              <option value="5 Cr – 10 Cr"></option>
+              <option value="10 Cr+"></option>
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label for="cf-message">Tell Us About Your Vision</label>
+            <textarea id="cf-message" name="message" rows="4" placeholder="Describe your project, timeline, and aspirations..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="contact-submit">
+            <span>Send Message</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <div class="form-success" id="form-success">
+            <span>✓</span> Thank you! We'll be in touch within 24 hours.
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ FOOTER ═══════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#home" class="nav-logo">
+          <span class="logo-mark">NJ</span>
+          <span class="logo-text">Design Studio</span>
+        </a>
+        <p class="footer-tagline">Architecture for a better tomorrow.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="#portfolio">Portfolio</a>
+        <a href="#services">Services</a>
+        <a href="#process">Process</a>
+        <a href="#about">About</a>
+
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="footer-copy">
+        © 2024 NJ Design Studio. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="/admin.html">Admin</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════ STICKY FAB ═══════════════════════════════════ -->
+  <a href="#contact" class="fab" id="sticky-fab" aria-label="Book Consultation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span class="fab-label">Book Consultation</span>
+  </a>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
