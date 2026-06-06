@@ -8,7 +8,7 @@ export function initContact() {
   const submitBtn = document.getElementById('contact-submit');
 
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       // Basic validation
@@ -39,19 +39,25 @@ export function initContact() {
           message: document.getElementById('cf-message')?.value || ''
         };
 
-        setTimeout(() => {
-          // Save message to localStorage
-          addMessageToStore(message);
+        // Send message to backend API
+        const result = await addMessageToStore(message);
 
+        if (result.success) {
           form.reset();
-          submitBtn.innerHTML = originalText;
-          submitBtn.disabled = false;
-          successMsg.classList.add('active');
-          
-          setTimeout(() => {
-            successMsg.classList.remove('active');
-          }, 5000);
-        }, 1500);
+          successMsg.textContent = 'Message sent successfully. We will get back to you soon.';
+          successMsg.style.color = '#c8a96e';
+        } else {
+          successMsg.textContent = 'Failed to send message. Please try again.';
+          successMsg.style.color = 'red';
+        }
+
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        successMsg.classList.add('active');
+        
+        setTimeout(() => {
+          successMsg.classList.remove('active');
+        }, 5000);
       }
     });
   }

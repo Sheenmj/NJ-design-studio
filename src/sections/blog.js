@@ -1,7 +1,7 @@
 import { getStoreData } from '../utils/store.js';
 
-export function initBlog() {
-  const data = getStoreData();
+export async function initBlog() {
+  const data = await getStoreData();
   const posts = data.blog;
 
   const grid = document.getElementById('blog-grid');

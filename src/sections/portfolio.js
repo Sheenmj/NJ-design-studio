@@ -1,7 +1,7 @@
 import { getStoreData } from '../utils/store.js';
 
-export function initPortfolio() {
-  const data = getStoreData();
+export async function initPortfolio() {
+  const data = await getStoreData();
   const projects = data.projects;
 
   const grid = document.getElementById('portfolio-grid');

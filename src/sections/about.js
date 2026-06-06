@@ -1,7 +1,7 @@
 import { getStoreData } from '../utils/store.js';
 
-export function initAbout() {
-  const data = getStoreData();
+export async function initAbout() {
+  const data = await getStoreData();
   const team = data.team;
   const awards = data.awards;
 

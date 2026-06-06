@@ -10,7 +10,7 @@ import { initContact } from './sections/contact.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Mobile Nav Toggle
   const hamburger = document.getElementById('nav-hamburger');
   const navLinks = document.getElementById('nav-links');
@@ -89,10 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Sections
   initHero();
-  initPortfolio();
+  await initPortfolio();
   initServices();
   initProcess();
-  initAbout();
+  await initAbout();
 
   initContact();
 });

@@ -1,74 +1,7 @@
+const API_BASE = 'http://localhost:5000/api';
+
+// Keep fallback static data for sections that aren't backend-driven yet (like services, awards, blog)
 const defaultData = {
-  projects: [
-    {
-      id: 1,
-      title: "Ground Floor Hall",
-      category: "residential",
-      img: "/src/assets/portfolio/GF4.jpg",
-      client: "Mr. J.S Sahu Ji",
-      area: "Jabalpur",
-      status: "Proposed",
-      story: "A modern open-concept ground floor hall featuring a sleek dark kitchen island, contrasting with warm yellow walls and integrated cove lighting."
-    },
-    {
-      id: 2,
-      title: "Modern TV Unit",
-      category: "residential",
-      img: "/src/assets/portfolio/T8.jpg",
-      client: "Mr. & Mrs. Singh",
-      area: "Kachnar City, Jabalpur",
-      status: "Proposed",
-      story: "A minimalist TV unit design blending warm wood slatted panels with floating white shelves and subtle backlighting."
-    },
-    {
-      id: 3,
-      title: "Double-Height Atrium",
-      category: "residential",
-      img: "/src/assets/portfolio/ha2.jpg",
-      client: "Private Client",
-      area: "Jabalpur",
-      status: "Proposed",
-      story: "A dramatic double-height living area viewed from a glass-railed mezzanine, featuring intricate ceiling lighting and a central pooja space."
-    },
-    {
-      id: 4,
-      title: "Dining & Island Kitchen",
-      category: "residential",
-      img: "/src/assets/portfolio/FC1.jpg",
-      client: "Private Client",
-      area: "Jabalpur",
-      status: "Proposed",
-      story: "An integrated kitchen and dining space with a white marble island, dark wood cabinetry, and a striking teal ceiling accent."
-    },
-    {
-      id: 5,
-      title: "Master Bedroom Retreat",
-      category: "residential",
-      img: "/src/assets/portfolio/BEDROOM1.jpg",
-      client: "Private Client",
-      area: "Jabalpur",
-      status: "Proposed",
-      story: "A serene master bedroom design balancing modern aesthetics with comfort and warmth."
-    },
-    {
-      id: 6,
-      title: "Villa Exterior",
-      category: "residential",
-      img: "/src/assets/portfolio/V3.jpg",
-      client: "Private Client",
-      area: "Jabalpur",
-      status: "Proposed",
-      story: "A striking exterior facade combining contemporary geometric volumes with natural material finishes."
-    }
-  ],
-  team: [
-    {
-      id: 1,
-      name: "Nishant Joesph",
-      role: "Principal Architect",
-      img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400"
-    }
-  ],
   awards: [
     { id: 1, year: "2023", title: "AIA National Architecture Award" },
     { id: 2, year: "2022", title: "Global Sustainability Prize" },
@@ -97,39 +30,69 @@ const defaultData = {
       excerpt: "Using generative algorithms to optimize city layouts for walkability and microclimates.",
       img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600"
     }
-  ],
-  messages: []
+  ]
 };
 
-export function getStoreData() {
-  const data = localStorage.getItem('nj_store');
-  if (data) {
-    return JSON.parse(data);
+export async function getStoreData() {
+  try {
+    const [projectsRes, teamRes] = await Promise.all([
+      fetch(`${API_BASE}/projects`),
+      fetch(`${API_BASE}/team`)
+    ]);
+
+    const projectsData = await projectsRes.json();
+    const teamData = await teamRes.json();
+
+    return {
+      ...defaultData,
+      projects: projectsData.success ? projectsData.data.map(p => ({
+        id: p._id,
+        title: p.title,
+        category: p.category.toLowerCase(),
+        img: p.imageUrl,
+        story: p.description,
+        client: 'Private Client', // Fallback, since model doesn't have it
+        area: 'Jabalpur', // Fallback
+        status: p.featured ? 'Featured' : 'Completed' // Fallback
+      })) : [],
+      team: teamData.success ? teamData.data.map(t => ({
+        id: t._id,
+        name: t.name,
+        role: t.role,
+        img: t.imageUrl
+      })) : []
+    };
+  } catch (error) {
+    console.error('Failed to fetch data from backend:', error);
+    // Return empty arrays on failure so the UI doesn't crash
+    return { ...defaultData, projects: [], team: [] };
   }
-  
-  // Initialize if empty
-  localStorage.setItem('nj_store', JSON.stringify(defaultData));
-  return defaultData;
 }
 
-export function saveStoreData(newData) {
-  localStorage.setItem('nj_store', JSON.stringify(newData));
+export async function addMessageToStore(messageData) {
+  try {
+    const res = await fetch(`${API_BASE}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fullName: messageData.name,
+        email: messageData.email,
+        phone: messageData.phone,
+        projectType: messageData.type,
+        estimatedBudget: messageData.budget,
+        message: messageData.message
+      })
+    });
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    return { success: false, error: 'Network error' };
+  }
 }
 
-export function addMessageToStore(message) {
-  const data = getStoreData();
-  if (!data.messages) data.messages = [];
-  data.messages.unshift({
-    id: 'm_' + Date.now(),
-    ...message,
-    timestamp: new Date().toISOString(),
-    read: false
-  });
-  saveStoreData(data);
-}
-
-export function getUnreadCount() {
-  const data = getStoreData();
-  if (!data.messages) return 0;
-  return data.messages.filter(m => !m.read).length;
-}
+// These are for the old localstorage admin.
+// They will be removed/ignored as we update admin.js to call the API directly.
+export function saveStoreData(newData) {}
+export function getUnreadCount() { return 0; }
