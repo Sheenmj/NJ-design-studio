@@ -26,3 +26,9 @@ dist-ssr
 # Environment Variables
 .env
 backend/.env
+
+# AI Agent Context Files
+CLAUDE_CONTEXT.md
+PROJECT_CONTEXT.md
+PROJECT_CONTEXT_SUMMARY.md
+SYSTEM_CONTEXT.md
