@@ -22,9 +22,10 @@ const PORT = process.env.PORT || 5000;
 // Security headers
 app.use(helmet());
 
-// CORS — allow Vite dev server and configured frontend URL
+// CORS — allow Vite dev server, configured frontend URL, and Vercel deployment
 const allowedOrigins = [
   'http://localhost:5173',
+  'https://nj-design-studio.vercel.app',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -34,6 +35,10 @@ app.use(
       // Allow requests with no origin (curl, mobile apps, server-to-server)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Also allow any *.vercel.app preview deployments
+      if (origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }
       return callback(new Error('Not allowed by CORS'));
