@@ -106,6 +106,9 @@ app.use((err, req, res, _next) => {
 // Start Server
 // ---------------------------------------------------------------------------
 
+// Expose the app for serverless function import
+module.exports = app;
+
 const startServer = async () => {
   try {
     await connectDB();
@@ -119,4 +122,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  startServer();
+} else {
+  // In serverless production, connect to database on load
+  connectDB();
+}
