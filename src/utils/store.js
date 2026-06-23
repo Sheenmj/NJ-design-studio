@@ -49,7 +49,7 @@ export async function getStoreData() {
         id: p._id,
         title: p.title,
         category: p.category.toLowerCase(),
-        img: p.imageUrl,
+        img: p.image_url,
         story: p.description,
         client: 'Private Client', // Fallback, since model doesn't have it
         area: 'Jabalpur', // Fallback
@@ -59,7 +59,7 @@ export async function getStoreData() {
         id: t._id,
         name: t.name,
         role: t.role,
-        img: t.imageUrl
+        img: t.image_url
       })) : []
     };
   } catch (error) {

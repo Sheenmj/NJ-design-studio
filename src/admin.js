@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = '';
     currentData.projects.forEach((item, index) => {
       list.appendChild(createListItem(
-        item.imageUrl, 
+        item.image_url, 
         item.title, 
         item.category, 
         () => openModal('portfolio', index),
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = '';
     currentData.team.forEach((item, index) => {
       list.appendChild(createListItem(
-        item.imageUrl, 
+        item.image_url, 
         item.name, 
         item.role, 
         () => openModal('team', index),
@@ -360,10 +360,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const formGroup = document.createElement('div');
     formGroup.className = 'form-group';
     formGroup.innerHTML = `
-      <label>Image</label>
+      <label>Image Upload</label>
       <div class="upload-widget">
         <input type="file" id="upload-file" accept="image/*">
-        ${item.imageUrl ? `<div style="margin-top:5px; font-size:0.8rem">Current: <a href="${item.imageUrl}" target="_blank">View Image</a></div>` : ''}
+        ${item.image_url ? `<div style="margin-top:5px; font-size:0.8rem">Current: <a href="${item.image_url}" target="_blank">View Image</a></div>` : ''}
       </div>
     `;
     modalForm.appendChild(formGroup);
