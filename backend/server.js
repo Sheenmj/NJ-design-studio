@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth.routes');
 const projectRoutes = require('./routes/project.routes');
 const teamRoutes = require('./routes/team.routes');
 const messageRoutes = require('./routes/message.routes');
+const dbCheck = require('./middleware/dbCheck');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -55,10 +56,10 @@ app.get('/api/health', (req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/team', teamRoutes);
-app.use('/api/messages', messageRoutes);
+app.use('/api/auth', dbCheck, authRoutes);
+app.use('/api/projects', dbCheck, projectRoutes);
+app.use('/api/team', dbCheck, teamRoutes);
+app.use('/api/messages', dbCheck, messageRoutes);
 
 // ---------------------------------------------------------------------------
 // Error Handling
