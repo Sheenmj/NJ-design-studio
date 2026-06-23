@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const Message = require('../models/Message');
+const supabase = require('../config/supabase');
 
 /**
  * Create a reusable Nodemailer transporter.
@@ -33,7 +33,7 @@ const buildEmailHtml = (data) => {
       <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
         <tr>
           <td style="padding: 8px 12px; font-weight: bold; color: #555; width: 140px;">Name</td>
-          <td style="padding: 8px 12px;">${data.fullName}</td>
+          <td style="padding: 8px 12px;">${data.full_name}</td>
         </tr>
         <tr style="background: #f9f9f9;">
           <td style="padding: 8px 12px; font-weight: bold; color: #555;">Email</td>
@@ -44,15 +44,15 @@ const buildEmailHtml = (data) => {
           <td style="padding: 8px 12px; font-weight: bold; color: #555;">Phone</td>
           <td style="padding: 8px 12px;">${data.phone}</td>
         </tr>` : ''}
-        ${data.projectType ? `
+        ${data.project_type ? `
         <tr style="background: #f9f9f9;">
           <td style="padding: 8px 12px; font-weight: bold; color: #555;">Project Type</td>
-          <td style="padding: 8px 12px;">${data.projectType}</td>
+          <td style="padding: 8px 12px;">${data.project_type}</td>
         </tr>` : ''}
-        ${data.estimatedBudget ? `
+        ${data.estimated_budget ? `
         <tr>
           <td style="padding: 8px 12px; font-weight: bold; color: #555;">Est. Budget</td>
-          <td style="padding: 8px 12px;">${data.estimatedBudget}</td>
+          <td style="padding: 8px 12px;">${data.estimated_budget}</td>
         </tr>` : ''}
       </table>
       <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-left: 4px solid #c9a96e;">
@@ -82,17 +82,25 @@ exports.create = async (req, res, next) => {
       });
     }
 
-    // Save to database
-    const newMessage = await Message.create({
-      fullName,
+    const messageData = {
+      full_name: fullName,
       email,
       phone,
-      projectType,
-      estimatedBudget,
+      project_type: projectType,
+      estimated_budget: estimatedBudget,
       message,
-    });
+    };
 
-    // Send email notification (non-blocking — don't fail the request if email fails)
+    // Save to database
+    const { data: newMessage, error } = await supabase
+      .from('messages')
+      .insert([messageData])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Send email notification (non-blocking)
     try {
       const transporter = createTransporter();
       if (transporter && process.env.NOTIFY_EMAIL) {
@@ -112,22 +120,33 @@ exports.create = async (req, res, next) => {
       data: { message: 'Message received' },
     });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, error: messages.join(', ') });
-    }
     next(error);
   }
 };
 
 /**
  * GET /api/messages
- * Protected — get all messages sorted by createdAt desc.
+ * Protected — get all messages sorted by created_at desc.
  */
 exports.getAll = async (req, res, next) => {
   try {
-    const messages = await Message.find().sort({ createdAt: -1 });
-    res.json({ success: true, data: messages });
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const mapped = messages.map(m => ({
+      ...m,
+      _id: m.id,
+      fullName: m.full_name,
+      projectType: m.project_type,
+      estimatedBudget: m.estimated_budget,
+      isRead: m.is_read
+    }));
+
+    res.json({ success: true, data: mapped });
   } catch (error) {
     next(error);
   }
@@ -139,11 +158,27 @@ exports.getAll = async (req, res, next) => {
  */
 exports.getOne = async (req, res, next) => {
   try {
-    const msg = await Message.findById(req.params.id);
+    const { data: msg, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (error) throw error;
     if (!msg) {
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
-    res.json({ success: true, data: msg });
+
+    const mapped = {
+      ...msg,
+      _id: msg.id,
+      fullName: msg.full_name,
+      projectType: msg.project_type,
+      estimatedBudget: msg.estimated_budget,
+      isRead: msg.is_read
+    };
+
+    res.json({ success: true, data: mapped });
   } catch (error) {
     next(error);
   }
@@ -155,15 +190,35 @@ exports.getOne = async (req, res, next) => {
  */
 exports.toggleRead = async (req, res, next) => {
   try {
-    const msg = await Message.findById(req.params.id);
-    if (!msg) {
+    const { data: msg, error: getErr } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (getErr || !msg) {
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
 
-    msg.isRead = !msg.isRead;
-    await msg.save();
+    const { data: updatedMsg, error: updateErr } = await supabase
+      .from('messages')
+      .update({ is_read: !msg.is_read, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select()
+      .single();
 
-    res.json({ success: true, data: msg });
+    if (updateErr) throw updateErr;
+
+    const mapped = {
+      ...updatedMsg,
+      _id: updatedMsg.id,
+      fullName: updatedMsg.full_name,
+      projectType: updatedMsg.project_type,
+      estimatedBudget: updatedMsg.estimated_budget,
+      isRead: updatedMsg.is_read
+    };
+
+    res.json({ success: true, data: mapped });
   } catch (error) {
     next(error);
   }
@@ -175,12 +230,23 @@ exports.toggleRead = async (req, res, next) => {
  */
 exports.remove = async (req, res, next) => {
   try {
-    const msg = await Message.findById(req.params.id);
-    if (!msg) {
+    const { data: msg, error: getErr } = await supabase
+      .from('messages')
+      .select('id')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (getErr || !msg) {
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
 
-    await msg.deleteOne();
+    const { error: delErr } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (delErr) throw delErr;
+
     res.json({ success: true, data: { message: 'Message deleted' } });
   } catch (error) {
     next(error);

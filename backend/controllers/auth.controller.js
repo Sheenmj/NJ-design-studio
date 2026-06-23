@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/Admin');
+const bcrypt = require('bcrypt');
+const supabase = require('../config/supabase');
 
 /**
  * POST /api/auth/login
@@ -17,9 +18,14 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    // Find admin by email
-    const admin = await Admin.findOne({ email: email.toLowerCase() });
-    if (!admin) {
+    // Find admin by email in Supabase
+    const { data: admin, error: dbErr } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+
+    if (dbErr || !admin) {
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password',
@@ -27,7 +33,7 @@ exports.login = async (req, res, next) => {
     }
 
     // Compare password
-    const isMatch = await admin.comparePassword(password);
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -38,7 +44,7 @@ exports.login = async (req, res, next) => {
     // Sign JWT
     const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
     const token = jwt.sign(
-      { id: admin._id, email: admin.email },
+      { id: admin.id, email: admin.email },
       process.env.JWT_SECRET,
       { expiresIn }
     );

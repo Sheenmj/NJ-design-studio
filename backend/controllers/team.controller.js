@@ -1,5 +1,5 @@
 const { Readable } = require('stream');
-const TeamMember = require('../models/TeamMember');
+const supabase = require('../config/supabase');
 const cloudinary = require('../config/cloudinary');
 
 /**
@@ -22,12 +22,19 @@ const uploadToCloudinary = (buffer, folder) => {
 
 /**
  * GET /api/team
- * Public — return all team members sorted by order asc.
+ * Public — return all team members sorted by "order" asc.
  */
 exports.getAll = async (req, res, next) => {
   try {
-    const members = await TeamMember.find().sort({ order: 1 });
-    res.json({ success: true, data: members });
+    const { data: members, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .order('order', { ascending: true });
+
+    if (error) throw error;
+
+    const mapped = members.map(m => ({ ...m, _id: m.id }));
+    res.json({ success: true, data: mapped });
   } catch (error) {
     next(error);
   }
@@ -39,11 +46,18 @@ exports.getAll = async (req, res, next) => {
  */
 exports.getOne = async (req, res, next) => {
   try {
-    const member = await TeamMember.findById(req.params.id);
+    const { data: member, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (error) throw error;
     if (!member) {
       return res.status(404).json({ success: false, error: 'Team member not found' });
     }
-    res.json({ success: true, data: member });
+
+    res.json({ success: true, data: { ...member, _id: member.id } });
   } catch (error) {
     next(error);
   }
@@ -57,6 +71,10 @@ exports.create = async (req, res, next) => {
   try {
     const { name, role, bio, order } = req.body;
 
+    if (!name || !role) {
+      return res.status(400).json({ success: false, error: 'Name and Role are required' });
+    }
+
     const memberData = {
       name,
       role,
@@ -67,17 +85,20 @@ exports.create = async (req, res, next) => {
     // Upload image to Cloudinary if provided
     if (req.file) {
       const result = await uploadToCloudinary(req.file.buffer, 'nj-design-studio/team');
-      memberData.imageUrl = result.secure_url;
-      memberData.publicId = result.public_id;
+      memberData.image_url = result.secure_url;
+      memberData.public_id = result.public_id;
     }
 
-    const member = await TeamMember.create(memberData);
-    res.status(201).json({ success: true, data: member });
+    const { data: member, error } = await supabase
+      .from('team_members')
+      .insert([memberData])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({ success: true, data: { ...member, _id: member.id } });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, error: messages.join(', ') });
-    }
     next(error);
   }
 };
@@ -88,35 +109,47 @@ exports.create = async (req, res, next) => {
  */
 exports.update = async (req, res, next) => {
   try {
-    const member = await TeamMember.findById(req.params.id);
-    if (!member) {
+    const { data: member, error: getErr } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (getErr || !member) {
       return res.status(404).json({ success: false, error: 'Team member not found' });
     }
 
     const { name, role, bio, order } = req.body;
+    const memberData = {};
 
-    if (name !== undefined) member.name = name;
-    if (role !== undefined) member.role = role;
-    if (bio !== undefined) member.bio = bio;
-    if (order !== undefined) member.order = Number(order);
+    if (name !== undefined) memberData.name = name;
+    if (role !== undefined) memberData.role = role;
+    if (bio !== undefined) memberData.bio = bio;
+    if (order !== undefined) memberData.order = Number(order);
 
     // Replace image if a new file is uploaded
     if (req.file) {
-      if (member.publicId) {
-        await cloudinary.uploader.destroy(member.publicId);
+      if (member.public_id) {
+        await cloudinary.uploader.destroy(member.public_id);
       }
       const result = await uploadToCloudinary(req.file.buffer, 'nj-design-studio/team');
-      member.imageUrl = result.secure_url;
-      member.publicId = result.public_id;
+      memberData.image_url = result.secure_url;
+      memberData.public_id = result.public_id;
     }
 
-    await member.save();
-    res.json({ success: true, data: member });
+    memberData.updated_at = new Date().toISOString();
+
+    const { data: updatedMember, error: updateErr } = await supabase
+      .from('team_members')
+      .update(memberData)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (updateErr) throw updateErr;
+
+    res.json({ success: true, data: { ...updatedMember, _id: updatedMember.id } });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, error: messages.join(', ') });
-    }
     next(error);
   }
 };
@@ -127,16 +160,27 @@ exports.update = async (req, res, next) => {
  */
 exports.remove = async (req, res, next) => {
   try {
-    const member = await TeamMember.findById(req.params.id);
-    if (!member) {
+    const { data: member, error: getErr } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (getErr || !member) {
       return res.status(404).json({ success: false, error: 'Team member not found' });
     }
 
-    if (member.publicId) {
-      await cloudinary.uploader.destroy(member.publicId);
+    if (member.public_id) {
+      await cloudinary.uploader.destroy(member.public_id);
     }
 
-    await member.deleteOne();
+    const { error: delErr } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (delErr) throw delErr;
+
     res.json({ success: true, data: { message: 'Team member deleted' } });
   } catch (error) {
     next(error);

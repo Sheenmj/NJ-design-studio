@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const connectDB = require('./config/db');
+
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
@@ -110,22 +110,13 @@ app.use((err, req, res, _next) => {
 // Expose the app for serverless function import
 module.exports = app;
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/api/health`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error.message);
-    process.exit(1);
-  }
+const startServer = () => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/api/health`);
+  });
 };
 
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   startServer();
-} else {
-  // In serverless production, connect to database on load
-  connectDB();
 }

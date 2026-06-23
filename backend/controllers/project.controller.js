@@ -1,5 +1,5 @@
 const { Readable } = require('stream');
-const Project = require('../models/Project');
+const supabase = require('../config/supabase');
 const cloudinary = require('../config/cloudinary');
 
 /**
@@ -22,12 +22,20 @@ const uploadToCloudinary = (buffer, folder) => {
 
 /**
  * GET /api/projects
- * Public — return all projects sorted by createdAt desc.
+ * Public — return all projects sorted by created_at desc.
  */
 exports.getAll = async (req, res, next) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
-    res.json({ success: true, data: projects });
+    const { data: projects, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Map `id` to `_id` as well for legacy frontend compatibility
+    const mapped = projects.map(p => ({ ...p, _id: p.id }));
+    res.json({ success: true, data: mapped });
   } catch (error) {
     next(error);
   }
@@ -39,11 +47,18 @@ exports.getAll = async (req, res, next) => {
  */
 exports.getOne = async (req, res, next) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (error) throw error;
     if (!project) {
       return res.status(404).json({ success: false, error: 'Project not found' });
     }
-    res.json({ success: true, data: project });
+
+    res.json({ success: true, data: { ...project, _id: project.id } });
   } catch (error) {
     next(error);
   }
@@ -57,6 +72,10 @@ exports.create = async (req, res, next) => {
   try {
     const { title, category, description, featured } = req.body;
 
+    if (!title || !category) {
+      return res.status(400).json({ success: false, error: 'Title and Category are required' });
+    }
+
     const projectData = {
       title,
       category,
@@ -67,18 +86,20 @@ exports.create = async (req, res, next) => {
     // Upload image to Cloudinary if provided
     if (req.file) {
       const result = await uploadToCloudinary(req.file.buffer, 'nj-design-studio/projects');
-      projectData.imageUrl = result.secure_url;
-      projectData.publicId = result.public_id;
+      projectData.image_url = result.secure_url;
+      projectData.public_id = result.public_id;
     }
 
-    const project = await Project.create(projectData);
-    res.status(201).json({ success: true, data: project });
+    const { data: project, error } = await supabase
+      .from('projects')
+      .insert([projectData])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({ success: true, data: { ...project, _id: project.id } });
   } catch (error) {
-    // Handle Mongoose validation errors
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, error: messages.join(', ') });
-    }
     next(error);
   }
 };
@@ -89,36 +110,48 @@ exports.create = async (req, res, next) => {
  */
 exports.update = async (req, res, next) => {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project) {
+    const { data: project, error: getErr } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (getErr || !project) {
       return res.status(404).json({ success: false, error: 'Project not found' });
     }
 
     const { title, category, description, featured } = req.body;
+    const projectData = {};
 
-    if (title !== undefined) project.title = title;
-    if (category !== undefined) project.category = category;
-    if (description !== undefined) project.description = description;
-    if (featured !== undefined) project.featured = featured === 'true' || featured === true;
+    if (title !== undefined) projectData.title = title;
+    if (category !== undefined) projectData.category = category;
+    if (description !== undefined) projectData.description = description;
+    if (featured !== undefined) projectData.featured = featured === 'true' || featured === true;
 
     // Replace image if a new file is uploaded
     if (req.file) {
       // Destroy old Cloudinary image if it exists
-      if (project.publicId) {
-        await cloudinary.uploader.destroy(project.publicId);
+      if (project.public_id) {
+        await cloudinary.uploader.destroy(project.public_id);
       }
       const result = await uploadToCloudinary(req.file.buffer, 'nj-design-studio/projects');
-      project.imageUrl = result.secure_url;
-      project.publicId = result.public_id;
+      projectData.image_url = result.secure_url;
+      projectData.public_id = result.public_id;
     }
 
-    await project.save();
-    res.json({ success: true, data: project });
+    projectData.updated_at = new Date().toISOString();
+
+    const { data: updatedProject, error: updateErr } = await supabase
+      .from('projects')
+      .update(projectData)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (updateErr) throw updateErr;
+
+    res.json({ success: true, data: { ...updatedProject, _id: updatedProject.id } });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, error: messages.join(', ') });
-    }
     next(error);
   }
 };
@@ -129,17 +162,28 @@ exports.update = async (req, res, next) => {
  */
 exports.remove = async (req, res, next) => {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project) {
+    const { data: project, error: getErr } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+
+    if (getErr || !project) {
       return res.status(404).json({ success: false, error: 'Project not found' });
     }
 
     // Destroy Cloudinary image if it exists
-    if (project.publicId) {
-      await cloudinary.uploader.destroy(project.publicId);
+    if (project.public_id) {
+      await cloudinary.uploader.destroy(project.public_id);
     }
 
-    await project.deleteOne();
+    const { error: delErr } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (delErr) throw delErr;
+
     res.json({ success: true, data: { message: 'Project deleted' } });
   } catch (error) {
     next(error);
