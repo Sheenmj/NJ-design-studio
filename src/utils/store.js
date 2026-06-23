@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 // Keep fallback static data for sections that aren't backend-driven yet (like services, awards, blog)
 const defaultData = {
