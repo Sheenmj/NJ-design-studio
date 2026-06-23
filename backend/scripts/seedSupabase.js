@@ -1,6 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const supabase = require('../config/supabase');
 
 const SALT_ROUNDS = 12;
